@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0x4ee511A293bf9c8353A348725a0fECfF17B7146b';
+const contractAddress = '0x4123966cF54BbEcAcE1eA5057f92395138a08f75';
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 
@@ -17,6 +17,7 @@ const singer = provider.getSigner();
 const contract = new ethers.Contract(contractAddress, NFTAVs.abi, singer);
 
 function Home() {
+    const mintQuantity = 2
 
     // Know how many tokens have already been minted.
     const [totalMinted, setTotalMinted] = useState(0);
@@ -30,26 +31,35 @@ function Home() {
         const count = await contract.count();
         setTotalMinted(parseInt(count));
     };
+        
+    const mintTokens = async() => {
+        // Set the value of ether that the user will pay for that we pass an object with a value of the amount of ether which in this case will be 0.05 * mint quantity.
+        const mintCost = (0.05 * mintQuantity).toString();
+        const result = await contract.mint(mintQuantity, {
+            value: ethers.utils.parseEther(mintCost)
+        });
+
+        // Wait for the result to be mined.
+        await result.wait();
+        getCount();
+        alert(`Mint ${mintQuantity} successfully! Please check your avs on OpenSea in minutes.`);
+    };
 
     return (
         <div>
             <WalletBalance />
             <h1>Fired AVs NFT Collection</h1>
             {
-                // Array(totalMinted + 1)
-                Array(10)
-                    .fill(0)
-                    .map((_, i) => (
-                        <div key={i}>
-                            <NFTImage tokenId={i} />
-                        </div>
-                    ))
+                <button onClick={mintTokens}>
+                    Mint ${mintQuantity} Tokens
+                </button>
             }
         </div>
     );
 };
 
 function NFTImage({ tokenId, getCount }) {
+    const mintQuantity = 1
     const contentId = 'Qma86nBvbNeUqxAPrnaBdx2hzNu7pEtZ9PLzgYTtjPEtWJ';
     const metadataURI = `${contentId}/nftav_${tokenId}.json`;
     const imageURI = `https://gateway.pinata.cloud/ipfs/${contentId}/nftav_${tokenId}.jpg`;
@@ -68,11 +78,13 @@ function NFTImage({ tokenId, getCount }) {
 
     const mintToken = async() => {
         // That will give us access to the recipient's wallet address.
-        const connection = contract.connect(singer);
-        const addr = connection.address;
+        // const connection = contract.connect(singer);
+        // const addr = connection.address;
+
         // Set the value of ether that the user will pay for that we pass an object with a value of the amount of ether which in this case will be 0.05.
-        const result = await contract.payToMint(addr, metadataURI, {
-            value: ethers.utils.parseEther('0.05')
+        const mintCost = (0.05 * mintQuantity).toString();
+        const result = await contract.payToMint(metadataURI, mintQuantity, {
+            value: ethers.utils.parseEther(mintCost)
         });
 
         // Wait for the result to be mined.
