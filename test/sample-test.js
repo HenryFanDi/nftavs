@@ -17,15 +17,19 @@ describe("NFTAVs", function () {
 
     // Newly minted token that calls the payment method that we defined on the smart contract,
     // it takes the recipient and metadata uri as argument and then we can also define the message value as 0.05 ether.
-    const newlyMintedToken = await nftAVs.payToMint(recipient, metadataURI, { value: ethers.utils.parseEther('0.05') });
+    const mintQuantity = 10
+    const mintCost = (0.05 * mintQuantity).toString();
+    const newlyMintedToken = await nftAVs.mint(mintQuantity, { value: ethers.utils.parseEther(mintCost) });
 
     // wait until the transaction is mined
     await newlyMintedToken.wait();
 
     balance = await nftAVs.balanceOf(recipient);
-    expect(balance).to.equal(1);
+    expect(balance).to.equal(mintQuantity);
 
-    expect(await nftAVs.isContentOwned(metadataURI)).to.equal(true);
+    // expect(await nftAVs.isContentOwned(metadataURI)).to.equal(true);
+
+    ///
 
     // expect(await greeter.greet()).to.equal("Hello, world!");
 
