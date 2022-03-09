@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const contractAddress = '0x4ee511A293bf9c8353A348725a0fECfF17B7146b';
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 
@@ -52,8 +52,7 @@ function Home() {
 function NFTImage({ tokenId, getCount }) {
     const contentId = 'Qma86nBvbNeUqxAPrnaBdx2hzNu7pEtZ9PLzgYTtjPEtWJ';
     const metadataURI = `${contentId}/nftav_${tokenId}.json`;
-    // const imageURI = `https://gateway.pinata.cloud/ipfs/${tokenId}.jpg`;
-    const imageURI = `${contentId}/nftav_${tokenId}.jpg`;
+    const imageURI = `https://gateway.pinata.cloud/ipfs/${contentId}/nftav_${tokenId}.jpg`;
 
     const [isMinted, setIsMinted] = useState(false);
 
