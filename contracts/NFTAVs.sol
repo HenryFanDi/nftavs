@@ -62,6 +62,10 @@ contract NFTAVs is ERC721A, Ownable {
     function setTokenURIs(string[] memory tokenURIs) external {
         _tokenURIs = tokenURIs;
     }
+    
+    function getTokenURIs() external view returns (string[] memory) {
+        return _tokenURIs;
+    }
 
     // // TODO: Should freeze after specific timestamp.
     // function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
