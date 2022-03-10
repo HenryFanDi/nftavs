@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0x4123966cF54BbEcAcE1eA5057f92395138a08f75';
+const contractAddress = '0xDCFc75eaFd9993eE4bEA3Af6cfEe7287FFFaA003';
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 
@@ -23,25 +23,25 @@ function Home() {
     const [totalMinted, setTotalMinted] = useState(0);
 
     // Use effect hook in the jsx.
-    useEffect(() => {
-        getCount();
-    }, []);
+    // useEffect(() => {
+    //     getCount();
+    // }, []);
 
-    const getCount = async () => {
-        const count = await contract.count();
-        setTotalMinted(parseInt(count));
-    };
+    // const getCount = async () => {
+    //     const count = await contract.count();
+    //     setTotalMinted(parseInt(count));
+    // };
         
     const mintTokens = async() => {
         // Set the value of ether that the user will pay for that we pass an object with a value of the amount of ether which in this case will be 0.05 * mint quantity.
-        const mintCost = (0.05 * mintQuantity).toString();
-        const result = await contract.mint(mintQuantity, {
+        const mintCost = (0.005 * mintQuantity).toString();
+        const result = await contract.publicSaleMint(mintQuantity, {
             value: ethers.utils.parseEther(mintCost)
         });
 
         // Wait for the result to be mined.
         await result.wait();
-        getCount();
+        // getCount();
         alert(`Mint ${mintQuantity} successfully! Please check your avs on OpenSea in minutes.`);
     };
 
