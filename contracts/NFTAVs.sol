@@ -5,8 +5,9 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract NFTAVs is ERC721A, Ownable {
+contract NFTAVs is ERC721A, IERC2981, Ownable {
 
     uint256 public immutable maxPerAddressDuringMint = 100;
     uint256 public immutable collectionSize = 10;
@@ -15,10 +16,17 @@ contract NFTAVs is ERC721A, Ownable {
         uint64 publicPrice;
     }
 
-    SaleConfig public saleConfig;
+    SaleConfig public _saleConfig;
+
+    struct RoyaltyInfo {
+        address recipient;
+        uint24 amount;
+    }
+
+    RoyaltyInfo private _royalties;
 
     constructor() ERC721A("NFTAVs", "NAV") {
-        saleConfig = SaleConfig(0.005 ether);
+        _saleConfig = SaleConfig(0.005 ether);
     }
 
     modifier callerIsUser() {
@@ -27,7 +35,7 @@ contract NFTAVs is ERC721A, Ownable {
     }
 
     function publicSaleMint(uint256 quantity) external payable callerIsUser {
-        SaleConfig memory config = saleConfig;
+        SaleConfig memory config = _saleConfig;
         uint256 publicPrice = uint256(config.publicPrice);
         require(totalSupply() + quantity <= collectionSize, "reached max supply");
         require(numberMinted(msg.sender) + quantity <= maxPerAddressDuringMint, "can not mint this many");
@@ -67,41 +75,38 @@ contract NFTAVs is ERC721A, Ownable {
         return _tokenURIs;
     }
 
-    // // TODO: Should freeze after specific timestamp.
-    // function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-    // }
+    /**
+     * @notice Get royalty info for a token
+     *
+     * For a given token id and sale price, how much should be sent to whom as royalty
+     *
+     * @param _tokenId - the NFT asset queried for royalty information
+     * @param _salePrice - the sale price of the NFT asset specified by _tokenId
+     *
+     * @return receiver - address of who should be sent the royalty payment
+     * @return royaltyAmount - the royalty payment amount for _value sale price
+     */
 
-    // using Counters for Counters.Counter;
-    
-    // Counters.Counter private _tokenIdCounter;
+     /**
+     In general, marketplaces will deduct the royalty fee from the payment to the seller. 
+     E.g., if the NFT is sold for 1 ETH and the royalty fee is 5%, 
+     they would send 0.95 ETH to the seller and 0.05 ETH to the royalty receiver. 
+     The 0.05 ETH royalty could be sent to the royaltyRecipient right from the marketplace smart contract when the transaction happens, 
+     or could be escrowed until further time, or be transmitted in a separate manual transaction — there is no standard for that yet.
+     */
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) 
+        external 
+        view 
+        override 
+        returns (address receiver, uint256 royaltyAmount) 
+    {
+        RoyaltyInfo memory royalties = _royalties;
+        receiver = royalties.recipient;
+        royaltyAmount = (_salePrice * royalties.amount) / 10000;
+    }
 
-    // // Make sure that the same uri can't be minted twice.
-    // mapping(string => uint8) existingURIs;
-
-    // function isContentOwned(string memory uri) public view returns (bool) {
-    //     return existingURIs[uri] == 1;
-    // }
-
-    // // It takes a recipient and metadata content id then mint a new token with that data.
-    // // `payable` : means that somebody can transfer money into the contract.
-    // function payToMint(
-    //     string memory metadataURI,
-    //     uint256 quantity
-    // ) public payable {
-    //     require(existingURIs[metadataURI] != 1, 'NFT already minted!');
-    //     // Make sure that the minimum value is greater than xxx.
-    //     require(msg.value >= (0.05 ether * quantity), 'Need to pay up!');
-
-    //     uint256 newItemId = _tokenIdCounter.current();
-    //     _tokenIdCounter.increment();
-    //     existingURIs[metadataURI] = 1;
-
-    //     // Minted!
-    //     _safeMint(msg.sender, quantity);
-    // }
-
-    // // Know exactly how many tokens have been minted.
-    // function count() public view returns (uint256) {
-    //     return _tokenIdCounter.current();
-    // }
+    function setRoyalties(address recipient, uint256 value) external {
+        require(value <= 10000, 'ERC2981Royalties: Too high');
+        _royalties = RoyaltyInfo(recipient, uint24(value));
+    }
 }
