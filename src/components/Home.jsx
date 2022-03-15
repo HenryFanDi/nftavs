@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0x045a7d1e08E653E121eB66A8b0B7a68e6a5aEd94';
+const contractAddress = '0xC1Cfe0b1630aE36961d930d21537Ef65E0869baA';
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 

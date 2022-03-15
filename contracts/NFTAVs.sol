@@ -5,6 +5,7 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
@@ -13,9 +14,6 @@ contract NFTAVs is ERC721A, IERC2981, Ownable {
     uint256 public immutable maxPerAddressDuringMint = 100;
     uint256 public immutable collectionSize = 10;
 
-    bytes32 public _merkleRoot;
-    mapping(address => bool) public whitelistClaimed;
-    
     struct SaleConfig {
         uint64 publicPrice;
     }
@@ -59,19 +57,9 @@ contract NFTAVs is ERC721A, IERC2981, Ownable {
     }
 
     // Merkle Proof
-    function setMerkleRoot(bytes32 root) public {
-        _merkleRoot = root;
-    }
-
-    function whitelistMint(bytes32[] calldata _merkleProof) public returns (bool) {
-        require(!whitelistClaimed[msg.sender], "Address has already claimed.");
-        
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(_merkleProof, _merkleRoot, leaf), "Invalid proof.");
-
-        whitelistClaimed[msg.sender] = true;
-
-        return true; // Or you can mint tokens here
+    function isWhiteList(bytes32 _merkleRoot, address _sender, bytes32[] calldata _merkleProof, uint _quantity) public pure returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(_sender, _quantity));
+        return MerkleProof.verify(_merkleProof, _merkleRoot, leaf);
     }
 
     // Metadata URI
@@ -83,6 +71,19 @@ contract NFTAVs is ERC721A, IERC2981, Ownable {
 
     function setBaseURI(string calldata baseURI) external onlyOwner {
         _baseTokenURI = baseURI;
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+        
+        string memory baseURI = _baseURI();
+        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json")) : '';
     }
 
     string[] private _tokenURIs;
