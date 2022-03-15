@@ -5,12 +5,16 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 contract NFTAVs is ERC721A, IERC2981, Ownable {
 
     uint256 public immutable maxPerAddressDuringMint = 100;
     uint256 public immutable collectionSize = 10;
+
+    bytes32 public _merkleRoot;
+    mapping(address => bool) public whitelistClaimed;
     
     struct SaleConfig {
         uint64 publicPrice;
@@ -52,6 +56,22 @@ contract NFTAVs is ERC721A, IERC2981, Ownable {
         if (msg.value > price) {
             payable(msg.sender).transfer(msg.value - price);
         }
+    }
+
+    // Merkle Proof
+    function setMerkleRoot(bytes32 root) public {
+        _merkleRoot = root;
+    }
+
+    function whitelistMint(bytes32[] calldata _merkleProof) public returns (bool) {
+        require(!whitelistClaimed[msg.sender], "Address has already claimed.");
+        
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(MerkleProof.verify(_merkleProof, _merkleRoot, leaf), "Invalid proof.");
+
+        whitelistClaimed[msg.sender] = true;
+
+        return true; // Or you can mint tokens here
     }
 
     // Metadata URI
