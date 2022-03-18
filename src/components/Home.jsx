@@ -6,15 +6,15 @@ import { ethers } from "ethers";
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0xC1Cfe0b1630aE36961d930d21537Ef65E0869baA';
+// const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+// const provider = new ethers.providers.Web3Provider(window.ethereum);
 
 // Get the end user : get the singer to execute tx on the blockchain.
-const singer = provider.getSigner();
+// const singer = provider.getSigner();
 
 // Get the smart contract : instantiate the contract using the address the abi and the signer.
-const contract = new ethers.Contract(contractAddress, NFTAVs.abi, singer);
+// const contract = new ethers.Contract(contractAddress, NFTAVs.abi, singer);
 
 function Home() {
     const mintQuantity = 2
