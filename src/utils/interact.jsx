@@ -1,11 +1,10 @@
-// require('dotenv').config();
 import { ethers } from "ethers";
 import { pinJSONToIPFS } from './pinata.jsx'
 
 // Import the contract api from the artifacts directory.
 import NFTAVs from '../artifacts/contracts/NFTAVs.sol/NFTAVs.json';
 
-const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const contractAddress = '0x7ED0918fF0AA130e00e452467E340A5d3811cF83';
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 
@@ -122,9 +121,10 @@ export const mintNFT = async (url, name, description) => {
             status: "😢 Something went wrong while uploading your tokenURI.",
         }
     }
-    const tokenURI = pinataResponse.pintaUrl;
+    console.info(pinataResponse);
 
-    window.contract = contract;
+    const tokenURI = pinataResponse.pintaUrl;
+    const mintQuantity = 1;
 
     // Setup your ethereum transaction
     // to: specifies the the recipient address (our smart contract)
@@ -134,24 +134,27 @@ export const mintNFT = async (url, name, description) => {
     const transactionParameters = {
         to: contractAddress, // Required except during contract publications
         from: window.ethereum.selectedAddress, // Must match user's active address
-        'data': window.contract.methods.mintNFT(window.ethereum.selectedAddress, tokenURI).encodeAPI() // Make call to NFT smart contract
+        'data': contract.publicSaleMint(mintQuantity) // Make call to NFT smart contract
     }
 
     // Sign the transaction via metamask
     try {
-        const txHash = await window.ethereum
-            .request({
-                method: 'eth_sendTransaction',
-                params: [transactionParameters],
-            })
+        const mintCost = (0.005 * mintQuantity).toString();
+        const result = await contract.publicSaleMint(mintQuantity, {
+            value: ethers.utils.parseEther(mintCost)
+        });
+
+        // Wait for the result to be mined.
+        await result.wait();
+        const txHash = result["hash"];
         return {
             success: true,
-            status: "✅ Check out your transaction on Etherscan: https://ropsten.etherscan.io/tx/" + txHash
+            status: "✅ Check out your transaction on Etherscan: https://rinkeby.etherscan.io/tx/" + txHash,
         }
     } catch (error) {
         return {
             success: false,
-            status: "😥 Something went wrong: " + error.message
+            status: "😥 Something went wrong: " + error.message,
         }
     }
 };
